@@ -1,0 +1,9 @@
+{
+  "name": "mi-negocio-verde",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cuaderno interactivo Reverdecer · Mi negocio verde",
+  "dependencies": {
+    "@upstash/redis": "^1.38.4"
+  }
+}

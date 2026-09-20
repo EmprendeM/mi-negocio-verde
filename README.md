@@ -70,7 +70,63 @@ DNS que debe pedirle a quien administra el dominio.
 
 ---
 
-## 4. Cómo cambiar el contenido
+## 4. Códigos de participante y panel de seguimiento (opcional)
+
+Sin esta parte el cuaderno funciona igual, pero las respuestas viven solo en el
+dispositivo. Con ella, cada participante entra con un código, su avance se
+guarda en la nube y el equipo lo ve en `/admin`.
+
+### 4.1 Conectar la base de datos
+
+**Vercel KV ya no existe**: Vercel lo retiró y ahora el mismo servicio se llama
+*Upstash for Redis*. Tiene plan gratuito suficiente para este uso.
+
+1. En Vercel, entre a su proyecto y abra la pestaña **Storage**.
+2. Presione **Create Database**, busque **Upstash for Redis** en el Marketplace
+   e instálelo. Elija el plan **Free**.
+3. Cuando pregunte a qué proyecto conectarlo, elija `mi-negocio-verde`.
+4. Vercel crea solas las variables `KV_REST_API_URL` y `KV_REST_API_TOKEN`.
+   No hay que copiarlas a mano.
+
+### 4.2 Poner la clave del panel
+
+1. En el proyecto: **Settings → Environment Variables**.
+2. Name: `CLAVE_ADMIN`. Value: una contraseña larga que solo conozca el equipo.
+3. Marque los tres ambientes (Production, Preview, Development) y guarde.
+4. Vaya a **Deployments**, botón **⋯** del último despliegue, **Redeploy**.
+   Las variables nuevas solo entran con un despliegue nuevo.
+
+### 4.3 Repartir los códigos
+
+Los códigos **no se registran en ninguna parte**: el primero que lo escriba lo
+crea. Prepare una lista antes de la jornada, por ejemplo `VALLE-7K2M`,
+`VALLE-3P9D`, y entréguele uno a cada participante en papel.
+
+- Use letras y números, mínimo 4 caracteres, máximo 24. Solo se aceptan
+  mayúsculas, números y guiones.
+- **No use datos personales** (cédula, teléfono, nombre) como código.
+- Mézclelos con caracteres al azar: quien conozca un código puede ver y editar
+  ese cuaderno. Códigos predecibles como `VALLE-01`, `VALLE-02` permiten que
+  alguien adivine el de otro participante.
+
+### 4.4 Entrar al panel
+
+Abra `https://su-sitio.vercel.app/admin` y escriba la `CLAVE_ADMIN`. Verá la
+lista de participantes con avance por módulo, aciertos, evidencias y última
+actividad; puede buscar, ver el detalle de cada uno y descargar un CSV para
+Excel.
+
+### 4.5 Datos personales
+
+Cuando las respuestas salen del dispositivo, el programa pasa a ser responsable
+del tratamiento de datos personales (Ley 1581 de 2012 en Colombia). Antes de
+usar los códigos en campo, revise con el área jurídica la autorización
+informada, la finalidad declarada y el procedimiento para consultar o eliminar
+datos. No soy abogado: ese punto verifíquelo con quien corresponda.
+
+---
+
+## 5. Cómo cambiar el contenido
 
 Casi todo vive en un solo archivo: **`assets/js/datos.js`**.
 
@@ -98,30 +154,45 @@ use formato JPG, ancho de 900 a 1600 px y menos de 300 KB por archivo.
 
 ---
 
-## 5. Privacidad
+## 6. Privacidad
 
-Las respuestas **no salen del dispositivo**: no hay servidor, ni base de datos,
-ni analítica. El participante puede descargar sus respuestas en un archivo
-`.json` y volver a cargarlas en otro dispositivo desde la página *Mis
-resultados*.
+**Sin código**, las respuestas no salen del dispositivo: no hay servidor, ni
+analítica, ni cuentas. El participante puede descargar sus respuestas en un
+archivo `.json` y volver a cargarlas en otro dispositivo.
 
-Si más adelante necesita recoger las respuestas de forma centralizada (por
-ejemplo para hacer seguimiento del programa), eso sí requiere un backend:
-las opciones más sencillas son Vercel KV, Supabase o un formulario de Google
-conectado al botón de envío.
+**Con código**, las respuestas se guardan en la base de datos del proyecto y el
+equipo las ve en `/admin`. El código es la única llave: quien lo tenga entra a
+ese cuaderno. Por eso los códigos deben ser difíciles de adivinar y no deben
+contener datos personales. Si necesita un nivel de protección mayor (por
+ejemplo, que cada persona tenga contraseña propia), lo indicado es migrar a
+Supabase con enlace mágico al correo.
 
 ---
 
 ## Estructura
 
 ```
-index.html                 estructura de la página e íconos
+index.html                 cuaderno del participante
+admin.html                 panel del equipo de acompañamiento (/admin)
 assets/css/estilos.css     diseño, responsive e impresión
 assets/js/datos.js         TODO el contenido de la cartilla
 assets/js/app.js           render, autoguardado, cuentas y resultados
+assets/js/nube.js          código de participante y guardado en la nube
 assets/img/                fotografías, logo y franja de aliados
+api/cuaderno.js            guarda y devuelve las respuestas de un código
+api/admin.js               lista de participantes, protegida por CLAVE_ADMIN
+package.json               dependencia @upstash/redis
 vercel.json                cabeceras y caché
 ```
+
+### Si algo falla
+
+| Síntoma | Causa más probable |
+|---|---|
+| Al escribir el código dice "No hay conexión" | Falta instalar Upstash for Redis, o no se hizo Redeploy después |
+| `/admin` dice "Falta configurar CLAVE_ADMIN" | La variable no existe o no se ha desplegado de nuevo |
+| `/admin` dice "Clave incorrecta" | La clave tiene espacios al inicio o al final |
+| El sitio no toma los cambios de `datos.js` | Espere el despliegue y recargue con Ctrl+F5 |
 
 ---
 

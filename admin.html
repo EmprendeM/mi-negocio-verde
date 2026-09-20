@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Seguimiento · Mi negocio verde</title>
+<link rel="icon" href="assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/estilos.css">
+<style>
+  .panel{max-width:1200px;margin:0 auto;padding:22px 16px 60px}
+  .entrar{max-width:420px;margin:60px auto;background:#fff;border-radius:18px;padding:26px;box-shadow:var(--sombra)}
+  .tabla-admin{background:#fff;border-radius:14px;overflow:auto;box-shadow:var(--sombra)}
+  .tabla-admin table{min-width:880px}
+  .tabla-admin td{font-size:.9rem;padding:10px 12px}
+  .tabla-admin tbody tr{cursor:pointer}
+  .tabla-admin tbody tr:hover td{background:var(--bg-verde)}
+  .mods{display:flex;gap:3px}
+  .mods i{display:block;width:26px;height:9px;border-radius:3px;background:#E3EDE4}
+  .mods i.p{background:var(--verde-sua)}
+  .mods i.c{background:var(--verde)}
+  .filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0}
+  .filtros input{max-width:280px}
+  .detalle{position:fixed;inset:0;background:rgba(14,40,24,.55);display:grid;place-items:center;padding:16px;z-index:60}
+  .detalle .caja{background:#fff;border-radius:18px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:24px}
+  .par{border-top:1px solid var(--linea);padding:9px 0}
+  .par b{display:block;font-family:'Nunito';font-size:.82rem;color:var(--gris)}
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <div class="barra-top"><i></i></div>
+  <div class="barra-in">
+    <img src="assets/img/logo.png" alt="Reverdecer">
+    <div class="barra-tit"><b>Seguimiento del proceso</b><span>Equipo de acompañamiento · Reverdecer</span></div>
+  </div>
+</header>
+
+<div class="panel">
+
+  <div id="entrar" class="entrar">
+    <h2>Panel del equipo</h2>
+    <p class="guia">Escriba la clave de acompañamiento para ver el avance de los participantes.</p>
+    <div class="campo"><label for="clave">Clave</label><input type="password" id="clave" autocomplete="current-password"></div>
+    <button class="btn" id="b-entrar">Entrar</button>
+    <p id="error-entrar" style="color:#C0392B;font-size:.9rem"></p>
+  </div>
+
+  <div id="tablero" class="oculto">
+    <h1>Avance de los participantes</h1>
+    <div class="metricas" id="metricas"></div>
+
+    <div class="filtros">
+      <input type="text" id="buscar" placeholder="Buscar por código, nombre, negocio o municipio">
+      <button class="btn gris chico" id="b-refrescar">Actualizar</button>
+      <button class="btn gris chico" id="b-csv">Descargar Excel (CSV)</button>
+      <button class="btn gris chico" id="b-salir">Salir</button>
+    </div>
+
+    <div class="tabla-caja tabla-admin">
+      <table>
+        <thead><tr>
+          <th>Código</th><th>Participante</th><th>Negocio</th><th>Municipio</th>
+          <th>Avance</th><th>Módulos</th><th>Aciertos</th><th>Evidencias</th><th>Última vez</th>
+        </tr></thead>
+        <tbody id="filas"></tbody>
+      </table>
+    </div>
+    <p class="mini" style="color:var(--gris);font-size:.85rem;margin-top:10px">
+      Toque una fila para ver el detalle del participante.
+    </p>
+  </div>
+</div>
+
+<script src="assets/js/datos.js"></script>
+<script>
+(function () {
+  'use strict';
+  var clave = sessionStorage.getItem('rvd-admin') || '';
+  var lista = [];
+
+  function $(s) { return document.querySelector(s); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function fecha(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso), hoy = new Date();
+    var dias = Math.floor((hoy - d) / 86400000);
+    var txt = d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+    if (dias === 0) return 'hoy';
+    if (dias === 1) return 'ayer';
+    return txt + ' (' + dias + ' días)';
+  }
+
+  function entrar() {
+    clave = $('#clave').value.trim();
+    if (!clave) return;
+    sessionStorage.setItem('rvd-admin', clave);
+    cargar();
+  }
+
+  function cargar() {
+    fetch('/api/admin?clave=' + encodeURIComponent(clave))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok) {
+          $('#error-entrar').textContent = d.error || 'No se pudo entrar.';
+          sessionStorage.removeItem('rvd-admin');
+          return;
+        }
+        lista = d.participantes;
+        $('#entrar').classList.add('oculto');
+        $('#tablero').classList.remove('oculto');
+        pintar();
+      })
+      .catch(function () { $('#error-entrar').textContent = 'No hay conexión con el servidor.'; });
+  }
+
+  function pintar() {
+    var q = ($('#buscar').value || '').toLowerCase();
+    var vis = lista.filter(function (p) {
+      var r = p.resumen || {};
+      return !q || (p.codigo + ' ' + (r.nombre || '') + ' ' + (r.negocio || '') + ' ' + (r.lugar || '')).toLowerCase().indexOf(q) > -1;
+    });
+
+    var activos = lista.filter(function (p) {
+      return p.actualizado && (Date.now() - new Date(p.actualizado)) < 14 * 86400000;
+    }).length;
+    var prom = lista.length ? Math.round(lista.reduce(function (s, p) { return s + ((p.resumen || {}).avance || 0); }, 0) / lista.length) : 0;
+    var term = lista.filter(function (p) { return ((p.resumen || {}).avance || 0) >= 90; }).length;
+
+    $('#metricas').innerHTML =
+      '<div class="metrica"><b>' + lista.length + '</b><span>participantes con código</span></div>' +
+      '<div class="metrica"><b>' + activos + '</b><span>activos en los últimos 14 días</span></div>' +
+      '<div class="metrica"><b>' + prom + '%</b><span>avance promedio</span></div>' +
+      '<div class="metrica"><b>' + term + '</b><span>con el cuaderno casi completo</span></div>';
+
+    $('#filas').innerHTML = vis.map(function (p) {
+      var r = p.resumen || {}, m = r.modulos || {};
+      var mods = ['m1', 'm2', 'm3', 'm4', 'm5'].map(function (k) {
+        var v = m[k] || 0;
+        return '<i class="' + (v >= 90 ? 'c' : v > 0 ? 'p' : '') + '" title="Módulo ' + k.slice(1) + ': ' + v + '%"></i>';
+      }).join('');
+      return '<tr data-codigo="' + esc(p.codigo) + '">' +
+        '<td><b>' + esc(p.codigo) + '</b></td>' +
+        '<td>' + esc(r.nombre || '—') + '</td>' +
+        '<td>' + esc(r.negocio || '—') + '</td>' +
+        '<td>' + esc(r.lugar || '—') + '</td>' +
+        '<td><b>' + (r.avance || 0) + '%</b></td>' +
+        '<td><span class="mods">' + mods + '</span></td>' +
+        '<td>' + (r.aciertos || 0) + '/10</td>' +
+        '<td>' + (r.evidencias || 0) + '/5</td>' +
+        '<td>' + fecha(p.actualizado) + '</td></tr>';
+    }).join('') || '<tr><td colspan="9">Todavía no hay participantes con código.</td></tr>';
+  }
+
+  function detalle(codigo) {
+    fetch('/api/admin?clave=' + encodeURIComponent(clave) + '&codigo=' + encodeURIComponent(codigo))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok) return alert(d.error);
+        var p = d.participante, R = p.respuestas || {}, r = p.resumen || {};
+        var h = '<h2>' + esc(p.codigo) + '</h2><p class="guia">' + esc(r.nombre || 'Sin nombre') +
+          ' · ' + esc(r.negocio || '') + ' · ' + esc(r.lugar || '') + '</p>' +
+          '<div class="resultado"><span class="etq">Avance</span><span class="dato">' + (r.avance || 0) + '%</span>' +
+          '<span class="etq">Aciertos</span><span class="dato">' + (r.aciertos || 0) + '/10</span>' +
+          '<span class="etq">Evidencias</span><span class="dato">' + (r.evidencias || 0) + '/5</span></div>';
+
+        function bloque(titulo, pares) {
+          var con = pares.filter(function (x) { return R[x[1]]; });
+          if (!con.length) return '';
+          return '<h3 style="margin-top:18px">' + titulo + '</h3>' + con.map(function (x) {
+            return '<div class="par"><b>' + esc(x[0]) + '</b>' + esc(R[x[1]]) + '</div>';
+          }).join('');
+        }
+
+        CARTILLA.modulos.forEach(function (m) {
+          h += bloque('Bitácora · Módulo ' + m.n, CARTILLA.bitacoraCampos.map(function (lab, i) {
+            return [lab, m.id + '.bit.' + i];
+          }));
+        });
+        h += bloque('Plan de 30 días', [
+          ['Acción 1', 'cierre.plan1.p0'], ['Fecha de revisión', 'cierre.plan1.fecha'],
+          ['Acción 2', 'cierre.plan2.p0'], ['Fecha de revisión', 'cierre.plan2.fecha'],
+          ['Lo que ahora hace con más claridad', 'cierre.claridad'],
+          ['Lo que necesita practicar', 'cierre.practicar']
+        ]);
+
+        h += '<div class="btns" style="margin-top:20px">' +
+          '<button class="btn gris" id="b-json">Descargar sus respuestas</button>' +
+          '<button class="btn" id="b-cerrar">Cerrar</button></div>';
+
+        var cap = document.createElement('div');
+        cap.className = 'detalle';
+        cap.innerHTML = '<div class="caja">' + h + '</div>';
+        document.body.appendChild(cap);
+        cap.addEventListener('click', function (e) {
+          if (e.target === cap || e.target.id === 'b-cerrar') cap.remove();
+          if (e.target.id === 'b-json') {
+            var b = new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(b); a.download = p.codigo + '.json'; a.click();
+          }
+        });
+      });
+  }
+
+  function csv() {
+    var cab = ['Codigo', 'Nombre', 'Negocio', 'Municipio', 'Avance', 'M1', 'M2', 'M3', 'M4', 'M5', 'Aciertos', 'Evidencias', 'Ultima actividad'];
+    var filas = lista.map(function (p) {
+      var r = p.resumen || {}, m = r.modulos || {};
+      return [p.codigo, r.nombre || '', r.negocio || '', r.lugar || '', (r.avance || 0) + '%',
+        (m.m1 || 0), (m.m2 || 0), (m.m3 || 0), (m.m4 || 0), (m.m5 || 0),
+        (r.aciertos || 0), (r.evidencias || 0), p.actualizado || ''];
+    });
+    var txt = '\uFEFF' + [cab].concat(filas).map(function (f) {
+      return f.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';');
+    }).join('\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'avance-participantes-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+  }
+
+  document.getElementById('b-entrar').addEventListener('click', entrar);
+  document.getElementById('clave').addEventListener('keydown', function (e) { if (e.key === 'Enter') entrar(); });
+  document.getElementById('buscar').addEventListener('input', pintar);
+  document.getElementById('b-refrescar').addEventListener('click', cargar);
+  document.getElementById('b-csv').addEventListener('click', csv);
+  document.getElementById('b-salir').addEventListener('click', function () {
+    sessionStorage.removeItem('rvd-admin'); location.reload();
+  });
+  document.getElementById('filas').addEventListener('click', function (e) {
+    var tr = e.target.closest('[data-codigo]');
+    if (tr) detalle(tr.getAttribute('data-codigo'));
+  });
+
+  if (clave) cargar();
+})();
+</script>
+</body>
+</html>

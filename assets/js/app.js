@@ -42,7 +42,9 @@
     clearTimeout(guardarPronto);
     guardarPronto = setTimeout(function () {
       try { localStorage.setItem(LLAVE, JSON.stringify(estado)); } catch (e) { }
-      var s = $('#guardado-txt'); if (s) { s.textContent = 'Guardado ' + new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }); }
+      var s = $('#guardado-txt');
+      if (s) { s.textContent = 'Guardado ' + new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }); }
+      if (window.NUBE) window.NUBE.cambio();
     }, 300);
   }
   function val(id) { return estado[id] == null ? '' : estado[id]; }
@@ -176,7 +178,8 @@
       '<p class="guia">Marque una respuesta. El cuaderno le dice de inmediato si va bien y por qué.</p>';
     m.quiz.forEach(function (q, i) {
       var id = m.id + '.quiz.' + i, elegida = val(id), resp = elegida === '' ? null : parseInt(elegida, 10);
-      h += '<div class="quiz-q"><div class="p"><span class="n">' + (i + 1) + '</span><p>' + esc(q.p) + '</p></div>';
+      h += '<div class="quiz-q" data-q="' + id + '"><div class="p"><span class="n">' + (i + 1) +
+        '</span><p>' + esc(q.p) + '</p></div>';
       q.ops.forEach(function (o, j) {
         var cls = '';
         if (resp != null) {
@@ -368,7 +371,20 @@
       '<button class="btn gris" id="b-bajar">Descargar mis respuestas</button>' +
       '<label class="btn gris" for="f-subir" style="cursor:pointer">Cargar respuestas</label>' +
       '<input type="file" id="f-subir" accept="application/json" class="oculto">' +
-      '<button class="btn gris" id="b-borrar">Borrar todo</button></div></div>' +
+      '<button class="btn gris" id="b-borrar">Borrar todo</button></div>' +
+      (!window.NUBE || !window.NUBE.disponible() ? '' :
+       window.NUBE.hayCodigo()
+        ? '<div class="aviso verde" style="margin-top:16px">' + ico('check') +
+          '<div><h4>Su código es ' + esc(window.NUBE.codigo()) + '</h4>' +
+          '<p>Con ese código puede seguir este mismo cuaderno desde otro teléfono o computador. ' +
+          'Su asesor ve su avance, no necesita que le envíe nada.</p></div></div>' +
+          '<div class="btns"><button class="btn gris chico" id="b-codigo">Usar otro código</button></div>'
+        : '<div class="aviso naranja" style="margin-top:16px">' + ico('alert') +
+          '<div><h4>Está trabajando solo en este dispositivo</h4>' +
+          '<p>Si borra los datos del navegador o cambia de teléfono, perderá el avance. ' +
+          'Pídale un código a su asesor para guardarlo en la nube.</p></div></div>' +
+          '<div class="btns"><button class="btn chico" id="b-codigo">Escribir mi código</button></div>') +
+      '</div>' +
       '</div></section>';
   }
 
@@ -652,6 +668,52 @@
       '<p class="nota">' + esc(nota) + '</p></div>';
   }
 
+  function calificarPregunta(id) {
+    var partes = id.split('.');
+    var m = D.modulos.filter(function (x) { return x.id === partes[0]; })[0];
+    if (!m) return;
+    var q = m.quiz[parseInt(partes[2], 10)];
+    var resp = parseInt(val(id), 10);
+    var caja = document.querySelector('.quiz-q[data-q="' + id + '"]');
+    if (!caja || isNaN(resp)) return;
+
+    Array.prototype.forEach.call(caja.querySelectorAll('.quiz-op'), function (op, j) {
+      op.classList.toggle('bien', j === q.ok);
+      op.classList.toggle('mal', j === resp && resp !== q.ok);
+    });
+    var bien = resp === q.ok;
+    var fb = caja.querySelector('.quiz-fb');
+    if (!fb) { fb = document.createElement('div'); caja.appendChild(fb); }
+    fb.className = 'quiz-fb ' + (bien ? 'bien' : 'mal');
+    fb.innerHTML = '<b>' + (bien ? '¡Correcto! ' : 'Todavía no. ') + '</b>' + esc(q.porque);
+  }
+
+  /* ------------------------------------ puente con el guardado en nube */
+  function resumenCorto() {
+    var mods = {}, ac = 0, cont = 0;
+    D.modulos.forEach(function (m) {
+      mods[m.id] = progreso(m).pct;
+      m.quiz.forEach(function (q, i) {
+        var v = val(m.id + '.quiz.' + i);
+        if (v !== '') { cont++; if (parseInt(v, 10) === q.ok) ac++; }
+      });
+    });
+    return {
+      nombre: val('perfil.nombre'), negocio: val('perfil.negocio'), lugar: val('perfil.lugar'),
+      avance: progresoGeneral(), modulos: mods, aciertos: ac, contestadas: cont,
+      evidencias: D.cierre.evidencias.filter(function (_, i) { return val('cierre.ev.' + i) === 'Lo tengo'; }).length
+    };
+  }
+
+  window.CUADERNO = {
+    leer: function () { return estado; },
+    resumen: resumenCorto,
+    reemplazar: function (nuevo) {
+      estado = nuevo || {};
+      try { localStorage.setItem(LLAVE, JSON.stringify(estado)); } catch (e) { }
+    }
+  };
+
   /* ------------------------------------------------------ eventos  */
   function irA(id, empujar) {
     document.querySelectorAll('.seccion').forEach(function (s) { s.classList.remove('activa'); });
@@ -681,17 +743,7 @@
         op.classList.add('marcada');
       } else op.classList.toggle('marcada', t.checked);
     }
-    if (t.closest('.quiz-op')) {
-      var mod = t.name.split('.')[0];
-      var m = D.modulos.filter(function (x) { return x.id === mod; })[0];
-      var cont = t.closest('.seccion');
-      var nuevo = document.createElement('div');
-      nuevo.innerHTML = quizHTML(m);
-      var viejo = cont.querySelectorAll('.tarjeta');
-      for (var i = 0; i < viejo.length; i++) {
-        if (viejo[i].querySelector('.quiz-q')) { viejo[i].replaceWith(nuevo.firstChild); break; }
-      }
-    }
+    if (t.closest('.quiz-op')) calificarPregunta(t.name);
     recalcular();
   }
 
@@ -728,6 +780,12 @@
     });
     window.addEventListener('popstate', function () { irA((location.hash || '#inicio').slice(1), false); });
 
+    if (window.NUBE) window.NUBE.arrancar(repintar);
+    else { conectarBotones(); irA((location.hash || '#inicio').slice(1), false); }
+  }
+
+  function conectarBotones() {
+    if (!$('#b-imprimir')) return;
     $('#b-imprimir').addEventListener('click', function () { window.print(); });
     $('#b-bajar').addEventListener('click', function () {
       var blob = new Blob([JSON.stringify(estado, null, 2)], { type: 'application/json' });
@@ -752,7 +810,17 @@
         estado = {}; localStorage.removeItem(LLAVE); location.reload();
       }
     });
+    var bc = $('#b-codigo');
+    if (bc) bc.addEventListener('click', function () { window.NUBE.cambiarCodigo(); });
+  }
 
+  /* vuelve a pintar todo con las respuestas que hayan llegado de la nube */
+  function repintar() {
+    var h = inicioHTML();
+    D.modulos.forEach(function (m) { h += moduloHTML(m); });
+    h += cierreHTML() + recursosHTML() + resultadosHTML();
+    main.innerHTML = h;
+    conectarBotones();
     irA((location.hash || '#inicio').slice(1), false);
   }
 
