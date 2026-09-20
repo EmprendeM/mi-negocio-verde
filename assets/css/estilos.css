@@ -1,0 +1,302 @@
+/* ==================================================================
+   Reverdecer · Mi negocio verde — hoja de estilos
+   Mobile first. Los colores y tamaños viven en :root.
+================================================================== */
+
+:root{
+  --verde-osc:#0E5A2E; --verde:#2E9B4E; --verde-sua:#7BC47F;
+  --naranja:#EE7623; --azul:#12599F; --tinta:#25332B; --gris:#5E6E63;
+  --bg:#F4F7F3; --bg-verde:#EDF5EC; --bg-naranja:#FDF2E7; --bg-azul:#E9F1FB;
+  --linea:#D6E5D8; --blanco:#fff;
+  --sombra:0 2px 10px rgba(16,58,32,.07);
+  --sombra-alta:0 12px 30px rgba(16,58,32,.14);
+  --radio:16px;
+  --ancho:1120px;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--tinta);
+  font-family:'Nunito Sans',system-ui,-apple-system,sans-serif;
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Nunito',system-ui,sans-serif;font-weight:800;color:var(--verde-osc);margin:0}
+h1{font-size:1.95rem;line-height:1.1;font-weight:900}
+h2{font-size:1.45rem;line-height:1.15}
+h3{font-size:1.1rem}
+p{margin:.55em 0}
+a{color:var(--azul)}
+img{max-width:100%;display:block}
+:focus-visible{outline:3px solid var(--naranja);outline-offset:2px;border-radius:6px}
+.oculto{display:none !important}
+.contenedor{width:100%;max-width:var(--ancho);margin:0 auto;padding:0 16px}
+
+/* ------------------------------------------------------ encabezado */
+.barra{
+  position:sticky;top:0;z-index:50;background:var(--blanco);
+  border-bottom:1px solid var(--linea);box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.barra-top{height:5px;background:var(--verde-osc)}
+.barra-top i{display:block;width:96px;height:5px;background:var(--naranja);margin-left:26px}
+.barra-in{display:flex;align-items:center;gap:12px;padding:10px 16px;max-width:var(--ancho);margin:0 auto}
+.barra img{height:38px;width:auto}
+.barra-tit{flex:1;min-width:0}
+.barra-tit b{display:block;font-family:'Nunito';font-weight:800;font-size:.95rem;color:var(--verde-osc);line-height:1.1}
+.barra-tit span{font-size:.72rem;color:var(--gris);letter-spacing:.04em}
+.avance{display:flex;align-items:center;gap:8px}
+.avance-aro{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--verde) calc(var(--p,0)*1%), #E3EDE4 0);}
+.avance-aro span{width:32px;height:32px;border-radius:50%;background:#fff;display:grid;place-items:center;
+  font-family:'Nunito';font-weight:800;font-size:.68rem;color:var(--verde-osc)}
+
+/* ----------------------------------------------------- navegación  */
+.nav{background:var(--verde-osc);position:sticky;top:0;z-index:40}
+.nav-in{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;max-width:var(--ancho);margin:0 auto;
+  scrollbar-width:none}
+.nav-in::-webkit-scrollbar{display:none}
+.nav a{
+  flex:0 0 auto;color:#DCEFDD;text-decoration:none;font-family:'Nunito';font-weight:700;
+  font-size:.85rem;padding:7px 14px;border-radius:999px;white-space:nowrap;
+}
+.nav a[aria-current="page"]{background:var(--blanco);color:var(--verde-osc)}
+.nav a:hover{background:rgba(255,255,255,.14);color:#fff}
+.nav a[aria-current="page"]:hover{background:#fff;color:var(--verde-osc)}
+
+/* ---------------------------------------------------------- portada */
+.hero{position:relative;overflow:hidden;background:var(--verde-osc)}
+.hero img{width:100%;height:280px;object-fit:cover;object-position:50% 38%;opacity:.95}
+.hero-tx{padding:22px 16px 26px;background:linear-gradient(180deg,rgba(14,90,46,.96),rgba(14,90,46,1))}
+.hero-tx h1{color:#fff;font-size:2.1rem}
+.hero-tx h1 em{font-style:normal;color:var(--verde-sua)}
+.hero-tx p{color:#D9EBDB;max-width:56ch}
+.hero-tx .lema{font-family:'Caveat';font-size:1.5rem;color:#FFCDA6;margin-top:4px}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;text-decoration:none;
+  font-family:'Nunito';font-weight:800;font-size:.92rem;padding:11px 20px;border-radius:999px;
+  background:var(--naranja);color:#fff;transition:transform .12s ease, filter .12s ease;
+}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn.claro{background:#fff;color:var(--verde-osc)}
+.btn.linea{background:transparent;color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
+.btn.chico{padding:8px 14px;font-size:.82rem}
+.btn.gris{background:#E6EDE6;color:var(--verde-osc)}
+.btn svg{width:18px;height:18px;flex:0 0 18px;fill:currentColor}
+.ico{width:26px;height:26px}
+
+/* ----------------------------------------------------------- panel */
+main{padding:22px 0 60px}
+.seccion{display:none}
+.seccion.activa{display:block;animation:entra .25s ease}
+@keyframes entra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.seccion.activa{animation:none}}
+
+.tarjeta{background:var(--blanco);border-radius:var(--radio);box-shadow:var(--sombra);
+  padding:18px;margin-bottom:16px}
+.tarjeta>h2{margin-bottom:2px}
+.guia{color:var(--azul);font-family:'Nunito';font-weight:700;font-size:.95rem;margin:.3em 0 0}
+
+.rejilla{display:grid;gap:16px}
+@media(min-width:760px){ .rejilla.dos{grid-template-columns:1fr 1fr} }
+
+/* --------------------------------------------------- tarjeta módulo */
+.mod-lista{display:grid;gap:16px;margin-top:18px}
+@media(min-width:720px){.mod-lista{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1000px){.mod-lista{grid-template-columns:repeat(3,1fr)}}
+.mod-card{
+  background:#fff;border-radius:var(--radio);overflow:hidden;box-shadow:var(--sombra);
+  display:flex;flex-direction:column;text-align:left;border:0;padding:0;cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease;font:inherit;color:inherit;
+}
+.mod-card:hover{transform:translateY(-3px);box-shadow:var(--sombra-alta)}
+.mod-card figure{margin:0;position:relative;height:150px;overflow:hidden}
+.mod-card img{width:100%;height:100%;object-fit:cover}
+.mod-card .etiqueta{position:absolute;left:12px;top:12px;background:rgba(14,90,46,.92);color:#fff;
+  font-family:'Nunito';font-weight:800;font-size:.72rem;letter-spacing:.06em;padding:5px 11px;border-radius:999px}
+.mod-card .cuerpo{padding:14px 16px 16px;flex:1;display:flex;flex-direction:column;gap:4px}
+.mod-card h3{font-size:1.05rem;line-height:1.2}
+.mod-card p{margin:0;font-size:.88rem;color:var(--gris)}
+.mod-card .pie{margin-top:auto;padding-top:10px;display:flex;align-items:center;gap:8px}
+.barrita{flex:1;height:7px;border-radius:999px;background:#E6EDE6;overflow:hidden}
+.barrita i{display:block;height:100%;background:var(--verde);border-radius:999px;transition:width .3s ease}
+.barrita.naranja i{background:var(--naranja)}
+.barrita.azul i{background:var(--azul)}
+.pct{font-family:'Nunito';font-weight:800;font-size:.78rem;color:var(--gris)}
+
+/* --------------------------------------------------- cabecera módulo */
+.mod-hero{position:relative;border-radius:var(--radio);overflow:hidden;margin-bottom:16px;background:var(--verde-osc)}
+.mod-hero img{width:100%;height:190px;object-fit:cover;object-position:50% 40%}
+.mod-hero .sobre{padding:16px 18px 18px;background:linear-gradient(180deg,rgba(14,90,46,.97),#0E5A2E)}
+.mod-hero .sobre h2{color:#fff}
+.mod-hero .sobre p{color:#D5E8D7;margin:.35em 0 0}
+.mod-hero .chip{display:inline-block;background:rgba(255,255,255,.18);color:#fff;font-family:'Nunito';
+  font-weight:800;font-size:.72rem;letter-spacing:.07em;padding:5px 12px;border-radius:999px;margin-bottom:8px}
+@media(min-width:820px){
+  .mod-hero{display:flex;align-items:stretch}
+  .mod-hero img{width:38%;height:auto;min-height:220px}
+  .mod-hero .sobre{flex:1;display:flex;flex-direction:column;justify-content:center;padding:26px 30px}
+}
+
+/* ---------------------------------------------------------- avisos */
+.aviso{display:flex;gap:12px;border-radius:var(--radio);padding:14px 16px;margin:14px 0}
+.aviso .ico{flex:0 0 30px;width:30px;height:30px;color:var(--verde-osc);fill:currentColor}
+.aviso h4{font-size:.98rem;margin-bottom:2px}
+.aviso p{margin:0;font-size:.92rem}
+.aviso.verde{background:var(--bg-verde)}
+.aviso.naranja{background:var(--bg-naranja)}
+.aviso.naranja h4{color:var(--naranja)}
+.aviso.naranja .ico{color:var(--naranja)}
+.aviso.azul{background:var(--bg-azul)}
+.aviso.azul h4{color:var(--azul)}
+.aviso.azul .ico{color:var(--azul)}
+
+.pasos{display:grid;gap:10px;margin:14px 0}
+.paso{display:flex;gap:12px}
+.paso .n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--verde);color:#fff;
+  font-family:'Nunito';font-weight:800;font-size:.85rem;display:grid;place-items:center}
+.paso:nth-child(even) .n{background:var(--naranja)}
+.paso p{margin:1px 0 0;font-size:.94rem}
+.paso b{font-family:'Nunito';font-weight:800;color:var(--verde-osc)}
+
+.formula{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg-azul);
+  border-radius:var(--radio);padding:12px;margin:14px 0;justify-content:center}
+.formula span{background:#fff;border-radius:999px;padding:6px 13px;font-family:'Nunito';
+  font-weight:800;font-size:.8rem;color:var(--azul)}
+.formula i{font-style:normal;font-family:'Nunito';font-weight:900;color:var(--naranja)}
+
+/* -------------------------------------------------------- campos   */
+.campo{margin:16px 0}
+.campo>label,.campo>.etq{display:block;font-family:'Nunito';font-weight:800;font-size:.95rem;
+  color:var(--verde-osc);margin-bottom:6px}
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%;font:inherit;font-size:1rem;color:var(--tinta);background:#fff;
+  border:1.5px solid var(--linea);border-radius:12px;padding:11px 13px;transition:border-color .15s ease;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--verde);outline:none;box-shadow:0 0 0 3px rgba(46,155,78,.14)}
+textarea{min-height:88px;resize:vertical;line-height:1.5}
+input::placeholder,textarea::placeholder{color:#9FB0A3}
+.moneda{position:relative}
+.moneda span{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--gris);
+  font-family:'Nunito';font-weight:800;pointer-events:none}
+.moneda input{padding-left:28px}
+
+.opciones{display:grid;gap:8px}
+.opcion{display:flex;gap:11px;align-items:flex-start;background:#fff;border:1.5px solid var(--linea);
+  border-radius:12px;padding:11px 13px;cursor:pointer;transition:border-color .12s ease,background .12s ease}
+.opcion:hover{border-color:var(--verde-sua)}
+.opcion input{margin:2px 0 0;accent-color:var(--verde);width:19px;height:19px;flex:0 0 19px}
+.opcion span{font-size:.95rem}
+.opcion.marcada{border-color:var(--verde);background:var(--bg-verde)}
+
+/* -------------------------------------------------------- tablas   */
+.tabla-caja{border-radius:14px;overflow:hidden;box-shadow:0 0 0 1.5px var(--linea);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+thead th{background:var(--verde-osc);color:#fff;font-family:'Nunito';font-weight:800;
+  text-align:left;padding:10px 12px;font-size:.85rem}
+tbody td{border-top:1px solid #E7F0E8;padding:6px 8px;vertical-align:middle}
+tbody td.rotulo{font-weight:600;padding-left:12px;font-size:.9rem}
+tbody tr:nth-child(even) td{background:#F8FBF8}
+td input{border:1px solid transparent;background:transparent;border-radius:8px;padding:8px 9px}
+td input:hover{border-color:var(--linea)}
+td input:focus{background:#fff;border-color:var(--verde)}
+td.calc{font-family:'Nunito';font-weight:800;color:var(--verde-osc);text-align:right;
+  padding-right:12px;white-space:nowrap}
+tr.total td{background:var(--bg-verde) !important;font-family:'Nunito';font-weight:800;color:var(--verde-osc)}
+.num{text-align:right}
+
+/* tablas que se vuelven fichas en celular */
+@media(max-width:700px){
+  .apilable thead{display:none}
+  .apilable, .apilable tbody, .apilable tr, .apilable td{display:block;width:100%}
+  .apilable tr{border-top:1px solid var(--linea);padding:10px 12px 12px}
+  .apilable tr:first-child{border-top:0}
+  .apilable tr:nth-child(even) td{background:transparent}
+  .apilable td{border:0;padding:4px 0}
+  .apilable td::before{content:attr(data-etq);display:block;font-family:'Nunito';font-weight:800;
+    font-size:.76rem;color:var(--gris);margin-bottom:3px}
+  .apilable td.rotulo{font-family:'Nunito';font-weight:800;color:var(--verde-osc);font-size:.95rem;
+    padding:0 0 4px}
+  .apilable td.rotulo::before{content:none}
+  .apilable td input{border:1.5px solid var(--linea);background:#fff}
+  .apilable td.calc{text-align:left;background:var(--bg-verde);border-radius:10px;padding:8px 10px;margin-top:4px}
+}
+
+/* ------------------------------------------------------ resultados */
+.resultado{background:var(--bg-verde);border-radius:14px;padding:14px 16px;margin:14px 0;
+  display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
+.resultado .etq{font-family:'Nunito';font-weight:800;color:var(--verde-osc);font-size:.95rem}
+.resultado .dato{font-family:'Nunito';font-weight:900;font-size:1.35rem;color:var(--verde-osc)}
+.resultado .dato.rojo{color:#C0392B}
+.resultado .nota{width:100%;font-size:.86rem;color:var(--gris);margin:0}
+.resultado.vacio{background:#F0F3EF;color:var(--gris)}
+.resultado.vacio .dato{color:#9FB0A3}
+
+.metricas{display:grid;gap:12px;margin:16px 0}
+@media(min-width:640px){.metricas{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:960px){.metricas{grid-template-columns:repeat(4,1fr)}}
+.metrica{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:var(--sombra)}
+.metrica b{display:block;font-family:'Nunito';font-weight:900;font-size:1.6rem;color:var(--verde-osc);line-height:1.1}
+.metrica span{font-size:.84rem;color:var(--gris)}
+
+.barras{display:grid;gap:10px;margin-top:12px}
+.barra-item{display:grid;grid-template-columns:1fr;gap:4px}
+.barra-item .txt{font-size:.9rem}
+.barra-doble{display:flex;align-items:center;gap:8px}
+.barra-doble .pista{flex:1;height:10px;border-radius:999px;background:#E6EDE6;position:relative;overflow:hidden}
+.barra-doble .antes{position:absolute;inset:0 auto 0 0;background:#C7DBC9;border-radius:999px}
+.barra-doble .hoy{position:absolute;inset:0 auto 0 0;background:var(--verde);border-radius:999px}
+.barra-doble .val{font-family:'Nunito';font-weight:800;font-size:.8rem;color:var(--gris);min-width:58px;text-align:right}
+
+/* ----------------------------------------------------------- quiz  */
+.quiz-q{background:#fff;border-radius:14px;box-shadow:0 0 0 1.5px var(--linea);overflow:hidden;margin:14px 0}
+.quiz-q>.p{display:flex;gap:11px;background:var(--bg-verde);padding:13px 15px}
+.quiz-q>.p .n{flex:0 0 25px;height:25px;border-radius:50%;background:var(--verde-osc);color:#fff;
+  font-family:'Nunito';font-weight:800;font-size:.8rem;display:grid;place-items:center}
+.quiz-q>.p p{margin:1px 0 0;font-family:'Nunito';font-weight:800;color:var(--verde-osc);font-size:1rem}
+.quiz-op{display:flex;gap:11px;align-items:center;padding:11px 15px;border-top:1px solid #EAF1EA;
+  cursor:pointer;transition:background .12s ease}
+.quiz-op:hover{background:#F7FBF7}
+.quiz-op input{accent-color:var(--verde);width:19px;height:19px;flex:0 0 19px}
+.quiz-op .letra{flex:0 0 24px;height:24px;border-radius:50%;border:2px solid var(--verde-sua);
+  display:grid;place-items:center;font-family:'Nunito';font-weight:800;font-size:.72rem;color:var(--verde)}
+.quiz-op.bien{background:#E7F5E9}
+.quiz-op.bien .letra{background:var(--verde);color:#fff;border-color:var(--verde)}
+.quiz-op.mal{background:#FCEDEA}
+.quiz-op.mal .letra{background:#C0392B;color:#fff;border-color:#C0392B}
+.quiz-fb{padding:11px 15px;border-top:1px solid #EAF1EA;font-size:.9rem;background:#FAFCF9}
+.quiz-fb b{font-family:'Nunito'}
+.quiz-fb.bien b{color:var(--verde)}
+.quiz-fb.mal b{color:#C0392B}
+
+/* ------------------------------------------------------- glosario  */
+.glosario{display:grid;gap:10px}
+@media(min-width:720px){.glosario{grid-template-columns:1fr 1fr}}
+.glosario div{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:var(--sombra)}
+.glosario b{font-family:'Nunito';color:var(--verde-osc);display:block}
+.glosario span{font-size:.9rem;color:var(--gris)}
+
+.fuentes{display:grid;gap:8px;margin-top:10px}
+.fuentes div{display:flex;gap:10px;font-size:.88rem}
+.fuentes i{flex:0 0 22px;height:22px;border-radius:6px;background:var(--bg-verde);color:var(--verde-osc);
+  font-family:'Nunito';font-weight:800;font-size:.72rem;display:grid;place-items:center;font-style:normal}
+
+/* ---------------------------------------------------- navegación pie */
+.pasar{display:flex;gap:10px;justify-content:space-between;margin-top:22px;flex-wrap:wrap}
+.guardado{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--gris);margin-top:10px}
+.guardado i{width:8px;height:8px;border-radius:50%;background:var(--verde);display:block}
+
+.pie{background:var(--verde-osc);color:#CFE6D1;padding:26px 0 30px;margin-top:40px}
+.pie .contenedor{display:grid;gap:16px}
+.pie img{background:#fff;border-radius:12px;padding:10px}
+.pie p{font-size:.84rem;margin:0}
+.pie .lema{font-family:'Caveat';font-size:1.5rem;color:#fff}
+
+/* ------------------------------------------------------- impresión */
+@media print{
+  .barra,.nav,.btns,.pasar,.btn,.hero img{display:none !important}
+  body{background:#fff}
+  .seccion{display:block !important}
+  .tarjeta{box-shadow:none;border:1px solid var(--linea);break-inside:avoid}
+}
