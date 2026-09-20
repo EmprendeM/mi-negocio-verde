@@ -28,6 +28,9 @@
   .detalle .caja{background:#fff;border-radius:18px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:24px}
   .par{border-top:1px solid var(--linea);padding:9px 0}
   .par b{display:block;font-family:'Nunito';font-size:.82rem;color:var(--gris)}
+  .codigos{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:14px 0}
+  .codigos span{background:var(--bg-verde);border-radius:10px;padding:9px 6px;text-align:center;
+    font-family:'Nunito';font-weight:800;font-size:.95rem;color:var(--verde-osc);letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -57,6 +60,7 @@
     <div class="filtros">
       <input type="text" id="buscar" placeholder="Buscar por código, nombre, negocio o municipio">
       <button class="btn gris chico" id="b-refrescar">Actualizar</button>
+      <button class="btn chico" id="b-generar">Generar códigos</button>
       <button class="btn gris chico" id="b-csv">Descargar Excel (CSV)</button>
       <button class="btn gris chico" id="b-salir">Salir</button>
     </div>
@@ -237,6 +241,113 @@
     var tr = e.target.closest('[data-codigo]');
     if (tr) detalle(tr.getAttribute('data-codigo'));
   });
+
+  /* ------------------------------------------- generador de códigos */
+  var LETRAS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   // sin I ni O
+  var NUMS = '23456789';                      // sin 0 ni 1
+
+  function alAzar(n) {
+    var bolsa = LETRAS + NUMS, out = '';
+    var r = new Uint32Array(n);
+    (window.crypto || window.msCrypto).getRandomValues(r);
+    for (var i = 0; i < n; i++) out += bolsa[r[i] % bolsa.length];
+    return out;
+  }
+
+  function generar(prefijo, cuantos, largo) {
+    var usados = {};
+    lista.forEach(function (p) { usados[p.codigo] = true; });
+    var out = [], intentos = 0;
+    while (out.length < cuantos && intentos < cuantos * 200) {
+      intentos++;
+      var c = (prefijo ? prefijo + '-' : '') + alAzar(largo);
+      if (usados[c]) continue;
+      usados[c] = true;
+      out.push(c);
+    }
+    return out;
+  }
+
+  function panelCodigos() {
+    var cap = document.createElement('div');
+    cap.className = 'detalle';
+    cap.innerHTML = '<div class="caja">' +
+      '<h2>Generar códigos</h2>' +
+      '<p class="guia">Los códigos no se registran en ninguna parte: el participante los activa al escribirlos por primera vez. Guarde esta lista.</p>' +
+      '<div class="rejilla dos">' +
+      '<div class="campo"><label for="g-pref">Prefijo del grupo</label>' +
+      '<input type="text" id="g-pref" value="VALLE" maxlength="10"></div>' +
+      '<div class="campo"><label for="g-num">¿Cuántos?</label>' +
+      '<input type="number" id="g-num" value="25" min="1" max="300"></div></div>' +
+      '<div class="btns"><button class="btn" id="g-ok">Generar</button>' +
+      '<button class="btn gris" id="g-cerrar">Cerrar</button></div>' +
+      '<div id="g-salida"></div></div>';
+    document.body.appendChild(cap);
+
+    var codigos = [];
+
+    function pintarCodigos() {
+      document.getElementById('g-salida').innerHTML =
+        '<div class="codigos">' + codigos.map(function (c) { return '<span>' + c + '</span>'; }).join('') + '</div>' +
+        '<div class="btns"><button class="btn" id="g-fichas">Imprimir fichas para recortar</button>' +
+        '<button class="btn gris" id="g-csv">Descargar lista (CSV)</button></div>' +
+        '<p class="mini" style="color:var(--gris);font-size:.85rem">Entregue una ficha a cada participante y anote en su lista quién recibió cuál.</p>';
+    }
+
+    cap.addEventListener('click', function (e) {
+      if (e.target === cap || e.target.id === 'g-cerrar') { cap.remove(); return; }
+
+      if (e.target.id === 'g-ok') {
+        var pref = (document.getElementById('g-pref').value || '')
+          .toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+        var n = Math.max(1, Math.min(300, parseInt(document.getElementById('g-num').value, 10) || 25));
+        codigos = generar(pref, n, 5);
+        pintarCodigos();
+      }
+
+      if (e.target.id === 'g-csv') {
+        var txt = '\uFEFF' + ['Codigo;Participante;Municipio;Fecha de entrega']
+          .concat(codigos.map(function (c) { return c + ';;;'; })).join('\n');
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' }));
+        a.download = 'codigos-' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+      }
+
+      if (e.target.id === 'g-fichas') imprimirFichas(codigos);
+    });
+  }
+
+  function imprimirFichas(codigos) {
+    var sitio = location.origin.replace(/^https?:\/\//, '');
+    var fichas = codigos.map(function (c) {
+      return '<div class="f"><div class="marca">REVERDECER · MI NEGOCIO VERDE</div>' +
+        '<div class="cod">' + c + '</div>' +
+        '<div class="url">' + sitio + '</div>' +
+        '<div class="linea">Nombre: ________________________</div></div>';
+    }).join('');
+
+    var w = window.open('', '_blank');
+    w.document.write('<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">' +
+      '<title>Códigos de participante</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet">' +
+      '<style>' +
+      'body{font-family:Nunito Sans,sans-serif;margin:12mm;color:#25332B}' +
+      '.hoja{display:grid;grid-template-columns:1fr 1fr;gap:6mm}' +
+      '.f{border:1.5px dashed #9FB8A4;border-radius:5mm;padding:7mm 6mm;text-align:center;break-inside:avoid}' +
+      '.marca{font-family:Nunito;font-weight:800;font-size:8pt;letter-spacing:.09em;color:#12599F}' +
+      '.cod{font-family:Nunito;font-weight:900;font-size:24pt;color:#0E5A2E;letter-spacing:.06em;margin:4mm 0 1mm}' +
+      '.url{font-size:10pt;color:#5E6E63}' +
+      '.linea{margin-top:7mm;font-size:9.5pt;color:#5E6E63}' +
+      '@media print{@page{margin:10mm}}' +
+      '</style></head><body>' +
+      '<div class="hoja">' + fichas + '</div>' +
+      '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},600);}</scr' + 'ipt>' +
+      '</body></html>');
+    w.document.close();
+  }
+
+  document.getElementById('b-generar').addEventListener('click', panelCodigos);
 
   if (clave) cargar();
 })();
